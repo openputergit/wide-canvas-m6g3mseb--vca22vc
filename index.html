@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookShare - Book Borrowing System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-[Inter]">
+    <!-- Navigation -->
+    <nav class="bg-teal-600 text-white shadow-lg">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold">BookShare</h1>
+                <div class="flex items-center space-x-4">
+                    <button id="profileBtn" class="hover:bg-teal-700 px-3 py-2 rounded">
+                        <i class="bi bi-person-circle"></i>
+                    </button>
+                    <button id="logoutBtn" class="hover:bg-teal-700 px-3 py-2 rounded">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Tabs -->
+        <div class="flex flex-wrap mb-8 border-b">
+            <button class="tab-btn active px-6 py-2 border-b-2 border-teal-600" data-tab="myBooks">My Books</button>
+            <button class="tab-btn px-6 py-2" data-tab="groups">Groups</button>
+            <button class="tab-btn px-6 py-2" data-tab="requests">Requests</button>
+        </div>
+
+        <!-- My Books Tab -->
+        <div id="myBooks" class="tab-content active">
+            <div class="flex justify-between mb-6">
+                <h2 class="text-xl font-semibold">My Book Collection</h2>
+                <button id="addBookBtn" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">
+                    Add Book
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="booksList">
+                <!-- Books will be dynamically added here -->
+            </div>
+        </div>
+
+        <!-- Groups Tab -->
+        <div id="groups" class="tab-content hidden">
+            <div class="flex justify-between mb-6">
+                <h2 class="text-xl font-semibold">My Groups</h2>
+                <button id="createGroupBtn" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">
+                    Create Group
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="groupsList">
+                <!-- Groups will be dynamically added here -->
+            </div>
+        </div>
+
+        <!-- Requests Tab -->
+        <div id="requests" class="tab-content hidden">
+            <h2 class="text-xl font-semibold mb-6">Borrow Requests</h2>
+            <div class="space-y-4" id="requestsList">
+                <!-- Requests will be dynamically added here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Book Modal -->
+    <div id="addBookModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 class="text-xl font-semibold mb-4">Add New Book</h3>
+            <form id="addBookForm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">ISBN</label>
+                        <input type="text" class="w-full border rounded px-3 py-2" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Title</label>
+                        <input type="text" class="w-full border rounded px-3 py-2" required>
+                    </div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" class="px-4 py-2 border rounded" onclick="closeModal('addBookModal')">Cancel</button>
+                        <button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700">Add</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .tab-btn.active {
+            border-bottom-color: #0d9488;
+            color: #0d9488;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+
+    <script>
+        // Mock data
+        const mockBooks = [
+            { id: 1, title: "The Great Gatsby", isbn: "978-3-16-148410-0", available: true },
+            { id: 2, title: "To Kill a Mockingbird", isbn: "978-3-16-148410-1", available: false },
+        ];
+
+        const mockGroups = [
+            { id: 1, name: "Book Club Alpha", members: 12 },
+            { id: 2, name: "Fantasy Readers", members: 8 },
+        ];
+
+        const mockRequests = [
+            { id: 1, book: "1984", requester: "John Doe", status: "pending" },
+            { id: 2, book: "Brave New World", requester: "Jane Smith", status: "accepted" },
+        ];
+
+        // Tab functionality
+        document.querySelectorAll('.tab-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                button.classList.add('active');
+                document.getElementById(button.dataset.tab).classList.add('active');
+            });
+        });
+
+        // Modal functionality
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        document.getElementById('addBookBtn').addEventListener('click', () => openModal('addBookModal'));
+
+        // Render functions
+        function renderBooks() {
+            const booksContainer = document.getElementById('booksList');
+            booksContainer.innerHTML = mockBooks.map(book => `
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="font-semibold">${book.title}</h3>
+                    <p class="text-sm text-gray-600">ISBN: ${book.isbn}</p>
+                    <p class="mt-2">
+                        <span class="inline-block px-2 py-1 text-sm rounded ${book.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${book.available ? 'Available' : 'Borrowed'}
+                        </span>
+                    </p>
+                </div>
+            `).join('');
+        }
+
+        function renderGroups() {
+            const groupsContainer = document.getElementById('groupsList');
+            groupsContainer.innerHTML = mockGroups.map(group => `
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="font-semibold">${group.name}</h3>
+                    <p class="text-sm text-gray-600">${group.members} members</p>
+                    <button class="mt-2 text-teal-600 hover:text-teal-700">View Books</button>
+                </div>
+            `).join('');
+        }
+
+        function renderRequests() {
+            const requestsContainer = document.getElementById('requestsList');
+            requestsContainer.innerHTML = mockRequests.map(request => `
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="font-semibold">${request.book}</h3>
+                            <p class="text-sm text-gray-600">Requested by: ${request.requester}</p>
+                        </div>
+                        <div class="space-x-2">
+                            ${request.status === 'pending' ? `
+                                <button class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">Accept</button>
+                                <button class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">Decline</button>
+                            ` : `
+                                <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded">${request.status}</span>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Initial render
+        renderBooks();
+        renderGroups();
+        renderRequests();
+
+        // Form submission
+        document.getElementById('addBookForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            // Add book logic here
+            closeModal('addBookModal');
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
